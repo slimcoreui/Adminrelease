@@ -394,7 +394,7 @@
     // ENTERPRISE CONFIGURATION
     // =================================================================
     
-    const USE_DEMO_MODE = true; 
+    const USE_DEMO_MODE = false; 
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1mFH5dDgrZagQOYewsbFXAxBpHHTYnjWcQF2yRqJKU6-GvGOV8OIHJ2GSTn_93zQ/exec"; 
     const CHUNK_SIZE = 400; 
     
@@ -587,9 +587,8 @@
         if (item.logicStatus === "ERROR") { themeClass = "card-error"; textClass = "text-err"; displayStatus = "ERROR (Check)"; }
 
         const idLen = item.id.length;
-        let idFontSize = "1rem"; 
-        if (idLen > 25) idFontSize = "0.75rem";
-        else if (idLen > 18) idFontSize = "0.85rem";
+        let idFontSize = "0.75rem"; // Standard size for uniformity
+        if (idLen > 25) idFontSize = "0.65rem";
 
         let middleRow = "";
         if (item.deducted > 0) middleRow = `<div class="money-row"><span>Deducted</span><span style="color:#ffcccc; font-weight:700;">-${fmt(item.deducted)}</span></div>`;
@@ -607,22 +606,53 @@
             waBtn = `<a href="${waLink}" target="_blank" class="btn-icon btn-wa-icon" title="Send Reminder"><i class="fa-solid fa-bell"></i></a>`;
         }
         
+        // COMMON BADGE STYLE (To ensure exact match for all 6 items)
+        const badgeStyle = `
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            background: rgba(255,255,255,0.25); 
+            padding: 5px 10px; 
+            border-radius: 8px; 
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            backdrop-filter: blur(4px); 
+            color: white;
+            white-space: nowrap;
+            height: 26px;
+            border: 1px solid rgba(255,255,255,0.1);
+        `;
+
         return `
         <div id="card-wrapper-${item.id}" class="order-card ${themeClass}">
         <div class="card-content">
-            <div class="card-head">
-                <div class="card-meta">
-                    <div class="card-badge" style="background:rgba(255,255,255,0.4); color:#2d3436;">ORDER NO ${index + 1}</div>
-                    <div class="card-badge"><i class="fa-solid fa-user"></i> ${item.reviewer}</div>
-                    <div class="card-badge" style="margin-top:5px;"><i class="fa-solid fa-handshake"></i> ${item.mediator}</div>
-                </div>
-                <div style="width:100%; overflow:hidden; text-align: right;">
-                    <div class="card-id" onclick="copy('${item.id}')" style="font-size:${idFontSize}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${item.id} <i class="fa-regular fa-copy" style="font-size:0.8em"></i>
+            
+            <div class="card-head" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); position:relative; z-index:1;">
+                
+                <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                    <div style="${badgeStyle}">
+                        <i class="fa-solid fa-hashtag"></i> ORDER ${index + 1}
                     </div>
-                    <span class="deal-tag">${item.dealType}</span>
-                    <div class="card-badge" style="margin-top:6px; font-size: 0.65rem;"><i class="fa-solid fa-table-list"></i> ROW ${item.rowIndex}</div>
+                    <div style="${badgeStyle}">
+                        <i class="fa-solid fa-user"></i> ${item.reviewer}
+                    </div>
+                    <div style="${badgeStyle}">
+                        <i class="fa-solid fa-handshake"></i> ${item.mediator}
+                    </div>
                 </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                    <div style="${badgeStyle}; cursor:pointer; font-family:monospace;" onclick="copy('${item.id}')">
+                        <i class="fa-solid fa-fingerprint"></i> ${item.id} <i class="fa-regular fa-copy" style="opacity:0.7;"></i>
+                    </div>
+                    <div style="${badgeStyle}">
+                        <i class="fa-solid fa-tag"></i> ${item.dealType}
+                    </div>
+                    <div style="${badgeStyle}">
+                        <i class="fa-solid fa-table-list"></i> ROW ${item.rowIndex}
+                    </div>
+                </div>
+                
                 <i class="fa-solid fa-file-invoice head-echo"></i>
             </div>
             <div class="glass-panel">
@@ -979,4 +1009,4 @@
     setInterval(()=>{ if(!USE_DEMO_MODE) apiCall('serverPing').catch(e => console.log("Ping failed")); }, 180000);
   </script>
 </body>
-</html>
+  </html>

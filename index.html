@@ -391,11 +391,15 @@
 
 <script>
     // =================================================================
-    // ENTERPRISE CONFIGURATION
+    // ENTERPRISE CONFIGURATION (EDIT HERE)
     // =================================================================
     
+    // Set to FALSE to use your real backend
     const USE_DEMO_MODE = false; 
+    
+    // PASTE YOUR NEW DEPLOYED WEB APP URL HERE
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxRBS038zHuBZU37h_jnfLgpdZ-su9BNMAvCgRrHly0IVq_ieFLdI9jIIq0HlUXLtvD9Q/exec"; 
+    
     const CHUNK_SIZE = 400; 
     
     // =================================================================
@@ -409,7 +413,7 @@
     let filteredData = [];
     let currentEditId = null;
     let isSyncing = false;
-    let chartInstances = {}; // Store Chart Objects
+    let chartInstances = {}; 
 
     async function apiCall(action, payload = null, retries = 3) {
       if(USE_DEMO_MODE) return new Promise(r => setTimeout(() => r(action === 'getData' ? {rows:DEMO_DATA, hasMore:false, startRow:2} : "SUCCESS"), 300));
@@ -422,8 +426,14 @@
             body: JSON.stringify({ action: action, payload: payload })
           });
           const text = await response.text();
-          if (!text) throw new Error("Empty Response");
-          return JSON.parse(text);
+          if (!text) throw new Error("Empty Response from Server");
+          
+          try {
+             return JSON.parse(text);
+          } catch(e) {
+             throw new Error("Server Error (HTML returned): " + text.substring(0, 100));
+          }
+
         } catch (e) {
           console.warn(`Attempt ${i+1} failed: ${e.message}`);
           if (i === retries - 1) throw e;
@@ -461,7 +471,9 @@
           if (result.error) throw new Error(result.error);
           
           if (result.rows && result.rows.length > 0) {
+            // BACKEND V3 SUPPORT: Use startRow from backend response
             const chunkStartRow = result.startRow || ((page - 1) * CHUNK_SIZE + 2);
+            
             const mappedChunk = result.rows
                 .map((row, idx) => mapRowToObject(row, chunkStartRow + idx))
                 .filter(item => item.id && item.id !== "N/A" && item.id !== "");
@@ -478,7 +490,7 @@
         allData = allData.map(item => ({ ...item, logicStatus: getLogicStatus(item) }));
         populateDropdowns();
         applyFilters();
-        initGraph(); // Initialize Graph
+        initGraph(); 
         showToast("Sync Complete: " + allData.length + " Orders");
 
       } catch (e) {
@@ -491,6 +503,7 @@
     }
 
     function mapRowToObject(row, sheetRowIndex) {
+      // Backend v3 sends columns A to S (Indexes 0 to 18)
       return {
         id:           row[0]  || "",  
         reviewer:     row[2]  || "N/A",            
@@ -587,7 +600,7 @@
         if (item.logicStatus === "ERROR") { themeClass = "card-error"; textClass = "text-err"; displayStatus = "ERROR (Check)"; }
 
         const idLen = item.id.length;
-        let idFontSize = "0.75rem"; // Standard size for uniformity
+        let idFontSize = "0.75rem"; 
         if (idLen > 25) idFontSize = "0.65rem";
 
         let middleRow = "";
@@ -606,7 +619,7 @@
             waBtn = `<a href="${waLink}" target="_blank" class="btn-icon btn-wa-icon" title="Send Reminder"><i class="fa-solid fa-bell"></i></a>`;
         }
         
-        // COMMON BADGE STYLE (To ensure exact match for all 6 items)
+        // COMMON BADGE STYLE
         const badgeStyle = `
             display: flex; 
             align-items: center; 
@@ -855,6 +868,7 @@
     function renderLogs(logs) {
         const list = document.getElementById('notifList');
         if(!logs || logs.length === 0) { list.innerHTML = '<div style="padding:20px; text-align:center; color:#b2bec3;">No recent edits.</div>'; return; }
+        // Updated for Backend v3 response array structure
         list.innerHTML = logs.map(l => `<div class="notif-item"><div class="notif-time">${l[0]}</div><div class="notif-id">${l[1]}</div><div class="notif-detail">${l[2]}</div></div>`).join('');
     }
 
@@ -1009,4 +1023,4 @@
     setInterval(()=>{ if(!USE_DEMO_MODE) apiCall('serverPing').catch(e => console.log("Ping failed")); }, 180000);
   </script>
 </body>
-  </html>
+</html>
